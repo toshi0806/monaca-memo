@@ -8,11 +8,68 @@
     <script src="components/loader.js"></script>
     <link rel="stylesheet" href="components/loader.css">
     <link rel="stylesheet" href="css/style.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="config.js"></script>
     <script>
+    // Firebase の初期化
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Firestore からメモを読み込み、表示する関数
+    function loadMemos() {
+        const memoList = document.getElementById('memo-list');
+        db.collection('memos').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
+            memoList.innerHTML = '';
+            snapshot.forEach((doc) => {
+                const memo = doc.data();
+                const div = document.createElement('div');
+                div.className = 'memo';
+                
+                div.innerHTML = `
+                    <p>${memo.text}</p>
+                    <small>${memo.createdAt.toDate().toLocaleString()}</small>
+                    <button onclick="deleteMemo('${doc.id}')">削除</button>
+                `;
+                memoList.appendChild(div);
+            });
+        });
+    }
+
+    // 新しいメモを追加する関数
+    function addMemo() {
+        const memoText = document.getElementById('memo-text');
+        const text = memoText.value.trim();
+        if (text) {
+            db.collection('memos').add({
+                text: text,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+                memoText.value = '';
+            });
+        }
+    }
+
+    // メモを削除する関数
+    function deleteMemo(id) {
+        db.collection('memos').doc(id).delete();
+    }
+
+    // アプリの初期化
+    document.addEventListener('DOMContentLoaded', function() {
+        loadMemos();
+    });
     </script>
 </head>
 <body>
-	<br />
-    This is a template for Monaca app.
+    <div class="app">
+        <h1>メモ帳アプリ</h1>
+        <div id="memo-list"></div>
+        <div class="memo-input">
+            <textarea id="memo-text" placeholder="メモを入力してください"></textarea>
+            <button onclick="addMemo()">保存</button>
+        </div>
+    </div>
 </body>
 </html>
