@@ -28,8 +28,9 @@
                 div.className = 'memo';
                 
                 div.innerHTML = `
-                    <p>${memo.text}</p>
+                    <p class="memo-text">${memo.text}</p>
                     <small>${memo.createdAt.toDate().toLocaleString()}</small>
+                    <button onclick="editMemo('${doc.id}', this)">編集</button>
                     <button onclick="deleteMemo('${doc.id}')">削除</button>
                 `;
                 memoList.appendChild(div);
@@ -54,6 +55,44 @@
     // メモを削除する関数
     function deleteMemo(id) {
         db.collection('memos').doc(id).delete();
+    }
+
+    // メモを編集する関数
+    function editMemo(id, button) {
+        const memoDiv = button.parentElement;
+        const memoText = memoDiv.querySelector('.memo-text');
+        const currentText = memoText.textContent;
+
+        // 編集用のテキストエリアを作成
+        const textarea = document.createElement('textarea');
+        textarea.value = currentText;
+        memoText.replaceWith(textarea);
+
+        // 編集ボタンを保存ボタンに変更
+        button.textContent = '保存';
+        button.onclick = function() {
+            saveMemo(id, textarea.value, memoDiv, textarea);
+        };
+    }
+
+    // 編集したメモを保存する関数
+    function saveMemo(id, newText, memoDiv, textarea) {
+        db.collection('memos').doc(id).update({
+            text: newText
+        }).then(() => {
+            const p = document.createElement('p');
+            p.className = 'memo-text';
+            p.textContent = newText;
+            textarea.replaceWith(p);
+
+            const editButton = memoDiv.querySelector('button');
+            editButton.textContent = '編集';
+            editButton.onclick = function() {
+                editMemo(id, this);
+            };
+        }).catch(error => {
+            console.error("Error updating memo: ", error);
+        });
     }
 
     // アプリの初期化

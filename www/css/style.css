@@ -26,6 +26,12 @@ h1 {
     margin-bottom: 10px;
 }
 
+.memo textarea {
+    width: 100%;
+    min-height: 50px;
+    margin-bottom: 10px;
+}
+
 .memo-input {
     display: flex;
     flex-direction: column;
